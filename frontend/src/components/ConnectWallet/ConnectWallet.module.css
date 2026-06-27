@@ -1,0 +1,31 @@
+.button,
+.warning {
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.button {
+    background: #6c5ce7;
+    color: white;
+}
+.button:hover {
+    background: #5a4bd1;
+}
+
+.warning {
+    background: #ffd166;
+    color: #1a1a1a;
+}
+
+.account {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-family: monospace;
+    font-weight: 600;
+}
