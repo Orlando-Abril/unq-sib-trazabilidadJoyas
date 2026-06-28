@@ -26,9 +26,9 @@ function Buscador() {
   }
 
   return (
-    <div style={{ maxWidth: 420 }}>
-      <h2>Verificar pieza</h2>
-      <p style={{ color: "#666", marginBottom: "1rem" }}>
+    <div className="card form-card">
+      <h2 className="page-title">Verificar pieza</h2>
+      <p className="page-subtitle">
         Ingresá el ID de la pieza (o escaneá su QR) para ver su historia completa.
       </p>
       <form onSubmit={handleSubmit}>
@@ -72,7 +72,7 @@ function Detalle({ tokenId }: { tokenId: string }) {
             Dueño actual: <code>{historia.owner}</code>
           </p>
         </div>
-        <img src={qrUrl} alt="QR de verificación" width={140} height={140} />
+        <img className={styles.qr} src={qrUrl} alt="QR de verificación" width={140} height={140} />
       </header>
 
       <ol className={styles.timeline}>

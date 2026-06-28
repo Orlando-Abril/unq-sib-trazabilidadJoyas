@@ -32,8 +32,9 @@ export function MarcaPage() {
   }
 
   return (
-    <div style={{ maxWidth: 480 }}>
-      <h2>Marca — Registrar ensamblado</h2>
+    <div className="card form-card">
+      <h2 className="page-title">Marca — Registrar ensamblado</h2>
+      <p className="page-subtitle">Hito 5 · ensamblado de la pieza final.</p>
       <form onSubmit={handleSubmit}>
         <Input label="Token ID de la pieza" type="number" min="1" value={form.tokenId} onChange={update("tokenId")} required />
         <Input label="SKU del producto final" value={form.sku} onChange={update("sku")} required />

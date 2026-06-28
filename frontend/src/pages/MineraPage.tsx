@@ -56,8 +56,9 @@ export function MineraPage() {
   }
 
   return (
-    <div style={{ maxWidth: 480 }}>
-      <h2>Minera — Registrar extracción</h2>
+    <div className="card form-card">
+      <h2 className="page-title">Minera — Registrar extracción</h2>
+      <p className="page-subtitle">Hito 1 · crea el NFT de la pieza.</p>
       <form onSubmit={handleSubmit}>
         <Input label="ID del lote" value={form.idLote} onChange={update("idLote")} required />
         <Input

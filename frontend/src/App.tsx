@@ -27,28 +27,19 @@ const PAGES: Partial<Record<RoleKey, ReactNode>> = {
 function App() {
     return (
         <>
-            <header
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "1rem 2rem",
-                    background: "white",
-                    borderBottom: "1px solid #eee",
-                }}
-            >
-                <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
-                    <h1>Trazabilidad de Joyas 💎</h1>
+            <header className="app-header">
+                <Link to="/" className="brand">
+                    💎 Trazabilidad de Joyas
                 </Link>
-                <nav style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-                    <Link to="/verificar" style={{ color: "#6c5ce7", fontWeight: 600 }}>
+                <nav className="app-nav">
+                    <Link to="/verificar" className="nav-link">
                         Verificar pieza
                     </Link>
                     <ConnectWallet />
                 </nav>
             </header>
 
-            <main style={{ padding: "2rem" }}>
+            <main className="container">
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     {/* Rutas públicas de verificación (sin wallet ni rol) */}

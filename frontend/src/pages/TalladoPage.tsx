@@ -32,8 +32,9 @@ export function TalladoPage() {
   }
 
   return (
-    <div style={{ maxWidth: 480 }}>
-      <h2>Tallado — Registrar corte de gema</h2>
+    <div className="card form-card">
+      <h2 className="page-title">Tallado — Registrar corte de gema</h2>
+      <p className="page-subtitle">Hito 3 · corte de la gema.</p>
       <form onSubmit={handleSubmit}>
         <Input label="Token ID de la pieza" type="number" min="1" value={form.tokenId} onChange={update("tokenId")} required />
         <Input label="ID del lote refinado" value={form.idLoteRefinado} onChange={update("idLoteRefinado")} required />

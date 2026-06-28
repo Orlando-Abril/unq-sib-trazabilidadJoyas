@@ -10,7 +10,7 @@ import { TxStatus } from "../components/ui/TxStatus";
 // La Joyería realiza dos hitos: Retail (6) y Venta (7).
 export function JoyeriaPage() {
   return (
-    <div style={{ maxWidth: 480, display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+    <div className="stack">
       <RetailForm />
       <VentaForm />
     </div>
@@ -43,8 +43,8 @@ function RetailForm() {
   }
 
   return (
-    <section>
-      <h2>Joyería — Retail (hito 6)</h2>
+    <section className="card">
+      <h2 className="page-title">Joyería — Retail (hito 6)</h2>
       <form onSubmit={handleSubmit}>
         <Input label="Token ID de la pieza" type="number" min="1" value={form.tokenId} onChange={update("tokenId")} required />
         <Input label="ID de la tienda" value={form.idTienda} onChange={update("idTienda")} required />
@@ -86,9 +86,9 @@ function VentaForm() {
   }
 
   return (
-    <section>
-      <h2>Joyería — Venta al cliente (hito 7)</h2>
-      <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem" }}>
+    <section className="card">
+      <h2 className="page-title">Joyería — Venta al cliente (hito 7)</h2>
+      <p className="page-subtitle">
         Al registrar la venta, el NFT se transfiere a la wallet del cliente.
       </p>
       <form onSubmit={handleSubmit}>

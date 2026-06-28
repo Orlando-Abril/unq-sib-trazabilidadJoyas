@@ -36,8 +36,9 @@ export function CertificadoraPage() {
   }
 
   return (
-    <div style={{ maxWidth: 480 }}>
-      <h2>Certificadora (GIA) — Registrar certificación</h2>
+    <div className="card form-card">
+      <h2 className="page-title">Certificadora (GIA) — Registrar certificación</h2>
+      <p className="page-subtitle">Hito 4 · certificación de la gema.</p>
       <form onSubmit={handleSubmit}>
         <Input label="Token ID de la pieza" type="number" min="1" value={form.tokenId} onChange={update("tokenId")} required />
         <Input label="Claridad (ej. VS1)" value={form.claridad} onChange={update("claridad")} required />

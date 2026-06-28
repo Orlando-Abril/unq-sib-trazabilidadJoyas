@@ -1,23 +1,24 @@
 .pending,
 .success,
 .error {
-  margin-top: 1rem;
-  padding: 0.8rem 1rem;
-  border-radius: 8px;
+  margin-top: 1.2rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .pending {
-  background: #fff3cd;
-  color: #856404;
+  background: var(--warning-bg);
+  color: var(--warning-text);
 }
 
 .success {
-  background: #d4edda;
-  color: #155724;
+  background: var(--success-bg);
+  color: var(--success-text);
 }
 
 .error {
-  background: #f8d7da;
-  color: #721c24;
+  background: var(--error-bg);
+  color: var(--error-text);
 }

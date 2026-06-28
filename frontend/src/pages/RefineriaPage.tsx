@@ -32,8 +32,9 @@ export function RefineriaPage() {
   }
 
   return (
-    <div style={{ maxWidth: 480 }}>
-      <h2>Refinería — Registrar refinado</h2>
+    <div className="card form-card">
+      <h2 className="page-title">Refinería — Registrar refinado</h2>
+      <p className="page-subtitle">Hito 2 · refinado del oro.</p>
       <form onSubmit={handleSubmit}>
         <Input label="Token ID de la pieza" type="number" min="1" value={form.tokenId} onChange={update("tokenId")} required />
         <Input label="ID del lote entrante" value={form.idLoteEntrante} onChange={update("idLoteEntrante")} required />
