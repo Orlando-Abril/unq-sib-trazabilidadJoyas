@@ -12,14 +12,11 @@ import { Accordion } from "../components/ui/Accordion";
 export function MineraPage() {
   return (
     <div className="stack">
-      <Accordion title="Rama gema - crear NFT" subtitle="Extrae la gema y crea su NFT.">
+      <Accordion title="Reportar lote gema" subtitle="Extrae la gema y crea un NFT para ella.">
         <GemaForm />
       </Accordion>
-      <Accordion title="Rama oro - mintear ERC-20" subtitle="Extrae el oro y lo mintea como token.">
+      <Accordion title="Reportar lote oro" subtitle="Extrae el oro y lo mintea como token.">
         <OroForm />
-      </Accordion>
-      <Accordion title="Transferir oro" subtitle="Envia oro a la refineria o a la marca.">
-        <TransferOroForm />
       </Accordion>
     </div>
   );
@@ -123,36 +120,6 @@ function OroForm() {
         </Button>
       </form>
       <TxStatus status={status} error={error} successMessage="Oro extraido y minteado." />
-    </>
-  );
-}
-
-function TransferOroForm() {
-  const { status, error, run } = useTransaction();
-  const { form, update } = useForm({
-    destino: "",
-    cantidadMg: "",
-  });
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    await run(async () => {
-      const contract = await getWriteOro();
-      const tx = await contract.transfer(form.destino, BigInt(form.cantidadMg));
-      return tx.wait();
-    });
-  }
-
-  return (
-    <>
-      <form onSubmit={handleSubmit}>
-        <Input label="Direccion de destino (wallet)" value={form.destino} onChange={update("destino")} required />
-        <Input label="Cantidad (mg)" type="number" min="1" value={form.cantidadMg} onChange={update("cantidadMg")} required />
-        <Button type="submit" disabled={status === "pending"}>
-          {status === "pending" ? "Enviando..." : "Transferir oro"}
-        </Button>
-      </form>
-      <TxStatus status={status} error={error} successMessage="Oro transferido." />
     </>
   );
 }
