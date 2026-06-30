@@ -1,27 +1,26 @@
-// Espeja el enum Etapa del contrato (mismo orden).
+// Espeja el enum Etapa del contrato TrazabilidadJoyas (mismo orden).
+// El refinado del oro YA NO es una etapa del NFT: vive en el contrato OroToken.
 // Usamos un objeto const en vez de `enum` porque la plantilla de Vite
 // tiene activado erasableSyntaxOnly (no permite enums).
 export const Etapa = {
-    Extraccion: 0,
-    Refinado: 1,
-    Tallado: 2,
-    Certificacion: 3,
-    Ensamblado: 4,
-    Retail: 5,
-    Venta: 6,
-    Finalizada: 7,
+    ExtraccionGema: 0,
+    Tallado: 1,
+    Certificacion: 2,
+    Ensamblado: 3,
+    Retail: 4,
+    Venta: 5,
+    Finalizada: 6,
 } as const;
 
-// El tipo Etapa = 0 | 1 | 2 | ... | 7
+// El tipo Etapa = 0 | 1 | 2 | ... | 6
 export type Etapa = (typeof Etapa)[keyof typeof Etapa];
 
 export const ETAPA_LABEL: Record<Etapa, string> = {
-    0: "Extracción",
-    1: "Refinado",
-    2: "Tallado",
-    3: "Certificación",
-    4: "Ensamblado",
-    5: "Retail",
-    6: "Venta",
-    7: "Finalizada",
+    0: "Extracción de gema",
+    1: "Tallado",
+    2: "Certificación",
+    3: "Ensamblado",
+    4: "Retail",
+    5: "Venta",
+    6: "Finalizada",
 };

@@ -10,7 +10,7 @@ export function TalladoPage() {
   const { status, error, run } = useTransaction();
   const { form, update } = useForm({
     tokenId: "",
-    idLoteRefinado: "",
+    idLoteGema: "",
     tipoCorte: "",
     pesoCentiquilates: "",
     cantidadPiezas: "",
@@ -22,7 +22,7 @@ export function TalladoPage() {
       const contract = await getWriteContract();
       const tx = await contract.registrarTallado(
         BigInt(form.tokenId),
-        form.idLoteRefinado,
+        form.idLoteGema,
         form.tipoCorte,
         BigInt(form.pesoCentiquilates),
         Number(form.cantidadPiezas),
@@ -37,7 +37,7 @@ export function TalladoPage() {
       <p className="page-subtitle">Hito 3 · corte de la gema.</p>
       <form onSubmit={handleSubmit}>
         <Input label="Token ID de la pieza" type="number" min="1" value={form.tokenId} onChange={update("tokenId")} required />
-        <Input label="ID del lote refinado" value={form.idLoteRefinado} onChange={update("idLoteRefinado")} required />
+        <Input label="ID del lote de gema" value={form.idLoteGema} onChange={update("idLoteGema")} required />
         <Input label="Tipo de corte / talla" value={form.tipoCorte} onChange={update("tipoCorte")} required />
         <Input label="Peso (centiquilates, ej. 150 = 1.50 ct)" type="number" min="0" value={form.pesoCentiquilates} onChange={update("pesoCentiquilates")} required />
         <Input label="Cantidad de piezas" type="number" min="1" value={form.cantidadPiezas} onChange={update("cantidadPiezas")} required />
