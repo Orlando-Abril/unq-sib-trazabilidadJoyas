@@ -1,0 +1,33 @@
+.button,
+.warning {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.button {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.button:hover {
+  background: var(--primary-dark);
+}
+
+.warning {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.account {
+  background: var(--success-bg);
+  color: var(--success-text);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-family: "SFMono-Regular", Menlo, monospace;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
