@@ -5,19 +5,18 @@ import {
     ORO_ADDRESS,
     ORO_ABI,
 } from "../config/contract";
-import { getProvider, getSigner } from "./provider";
+import { getReadProvider, getSigner } from "./provider";
 
 // ===========================================================================
 //  CONTRATO DE LA GEMA / PIEZA (ERC-721)
 // ===========================================================================
 
-// Para LEER datos (no requiere firmar, no gasta gas)
+// LEER (publico, sin wallet) -> usa el RPC publico de Sepolia.
 export function getReadContract(): Contract {
-    const provider = getProvider();
-    return new Contract(JOYAS_ADDRESS, [...JOYAS_ABI], provider);
+    return new Contract(JOYAS_ADDRESS, [...JOYAS_ABI], getReadProvider());
 }
 
-// Para ESCRIBIR (firma con la wallet del usuario y gasta gas)
+// ESCRIBIR (firma con la wallet del usuario y gasta gas)
 export async function getWriteContract(): Promise<Contract> {
     const signer = await getSigner();
     return new Contract(JOYAS_ADDRESS, [...JOYAS_ABI], signer);
@@ -28,8 +27,7 @@ export async function getWriteContract(): Promise<Contract> {
 // ===========================================================================
 
 export function getReadOro(): Contract {
-    const provider = getProvider();
-    return new Contract(ORO_ADDRESS, [...ORO_ABI], provider);
+    return new Contract(ORO_ADDRESS, [...ORO_ABI], getReadProvider());
 }
 
 export async function getWriteOro(): Promise<Contract> {
