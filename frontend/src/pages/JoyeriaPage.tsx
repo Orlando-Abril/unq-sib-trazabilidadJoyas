@@ -13,10 +13,10 @@ import { Accordion } from "../components/ui/Accordion";
 export function JoyeriaPage() {
   return (
     <div className="stack">
-      <Accordion title="Retail (hito 6)" subtitle="Ingreso de la pieza a la tienda.">
+      <Accordion title="Poner en venta en Joyería" subtitle="Ingreso de la pieza a la tienda.">
         <RetailForm />
       </Accordion>
-      <Accordion title="Venta al cliente (hito 7)" subtitle="Transfiere el NFT a la wallet del cliente.">
+      <Accordion title="Vender a otro dueño" subtitle="Transfiere el NFT a la wallet del cliente.">
         <VentaForm />
       </Accordion>
     </div>

@@ -1,4 +1,4 @@
-import { BrowserProvider, JsonRpcSigner } from "ethers";
+import { BrowserProvider, JsonRpcProvider, JsonRpcSigner } from "ethers";
 
 // MetaMask inyecta su API en window.ethereum
 declare global {
@@ -7,7 +7,16 @@ declare global {
     }
 }
 
-// Provider = conexión de SOLO LECTURA a la blockchain
+// RPC publico de Sepolia: permite LEER la blockchain sin wallet.
+// Asi la verificacion por QR funciona en cualquier celular, sin MetaMask.
+const SEPOLIA_RPC = "https://ethereum-sepolia-rpc.publicnode.com";
+
+// Lectura PUBLICA (no requiere MetaMask). Para la verificacion por QR.
+export function getReadProvider(): JsonRpcProvider {
+    return new JsonRpcProvider(SEPOLIA_RPC);
+}
+
+// Provider de la WALLET (requiere MetaMask) - para detectar cuenta y red.
 export function getProvider(): BrowserProvider {
     if (!window.ethereum) {
         throw new Error("MetaMask no está instalado.");
