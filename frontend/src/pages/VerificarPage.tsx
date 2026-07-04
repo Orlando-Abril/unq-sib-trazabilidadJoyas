@@ -7,6 +7,7 @@ import { ETAPA_LABEL } from "../types/trazabilidad";
 import type { Etapa } from "../types/trazabilidad";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
+import { SEPOLIA } from "../config/network";
 import styles from "./VerificarPage.module.css";
 
 export function VerificarPage() {
@@ -71,6 +72,15 @@ function Detalle({ tokenId }: { tokenId: string }) {
           <p className={styles.meta}>
             Dueño actual: <code>{historia.owner}</code>
           </p>
+          <p className={styles.meta}>
+            <a
+              href={`${SEPOLIA.blockExplorer}/address/${historia.owner ?? ""}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Ver dueño en {SEPOLIA.name} Etherscan ↗
+            </a>
+          </p>
         </div>
         <img className={styles.qr} src={qrUrl} alt="QR de verificación" width={140} height={140} />
       </header>
@@ -91,6 +101,17 @@ function Detalle({ tokenId }: { tokenId: string }) {
             <p className={styles.firma}>
               Firmado por: <code>{h.registradoPor}</code>
             </p>
+            {h.txHash && (
+              <p className={styles.firma}>
+                <a
+                  href={`${SEPOLIA.blockExplorer}/tx/${h.txHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Ver transacción en {SEPOLIA.name} Etherscan ↗
+                </a>
+              </p>
+            )}
           </li>
         ))}
       </ol>

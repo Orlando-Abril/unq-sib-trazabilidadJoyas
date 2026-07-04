@@ -11,6 +11,7 @@ import { CertificadoraPage } from "./pages/CertificadoraPage";
 import { MarcaPage } from "./pages/MarcaPage";
 import { JoyeriaPage } from "./pages/JoyeriaPage";
 import { VerificarPage } from "./pages/VerificarPage";
+import { AdminPage } from "./pages/AdminPage";
 import { ROLES } from "./config/roles";
 import type { RoleKey } from "./config/roles";
 
@@ -22,6 +23,7 @@ const PAGES: Partial<Record<RoleKey, ReactNode>> = {
   CERTIFICADORA: <CertificadoraPage />,
   MARCA: <MarcaPage />,
   JOYERIA: <JoyeriaPage />,
+  ADMIN: <AdminPage />,
 };
 
 function App() {

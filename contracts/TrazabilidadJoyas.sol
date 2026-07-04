@@ -5,6 +5,13 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
+// Interfaz minima del contrato de oro: solo lo que necesitamos llamar desde
+// aca (la quema atomica al ensamblar). No importamos el contrato entero para
+// no acoplar los dos artifacts de compilacion.
+interface IOroToken {
+    function burnFrom(address cuenta, uint256 tokenIdPieza, uint256 cantidadMg) external;
+}
+
 /**
  * @title  TrazabilidadJoyas
  * @notice RAMA DE LA GEMA (no fungible) + pieza final de la trazabilidad.
@@ -117,7 +124,7 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
     // ----------------------------------------------------------------------
     //  ALMACENAMIENTO  (por tokenId)
     // ----------------------------------------------------------------------
-    mapping(uint256 => Etapa)          public etapaActual;
+    mapping(uint256 => Etapa) public etapaActual;
     mapping(uint256 => ExtraccionGema) public extracciones;
     mapping(uint256 => Tallado)        public tallados;
     mapping(uint256 => Certificacion)  public certificaciones;
@@ -151,6 +158,18 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
 
     function asignarRol(bytes32 rol, address cuenta) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _grantRole(rol, cuenta);
+    }
+
+    // ----------------------------------------------------------------------
+    //  REGISTRO DE CONTRATOS (patron "registry"/factory) — direccion del
+    //  contrato de oro, actualizable por el admin sin tener que redeployar
+    //  este contrato si el dia de mañana cambia OroToken.
+    // ----------------------------------------------------------------------
+    address public oroTokenContract;
+
+    function setOroTokenContract(address _oro) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_oro != address(0), "Direccion invalida");
+        oroTokenContract = _oro;
     }
 
     // ----------------------------------------------------------------------
@@ -245,9 +264,10 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
 
     // ----------------------------------------------------------------------
     //  HITO 4 — ENSAMBLADO (Marca). CONVERGENCIA de las dos ramas.
-    //  La Marca debe haber consumido el oro ANTES, llamando en OroToken a
-    //  consumirOroParaPieza(tokenId, oroConsumidoMg). Aca se deja registrada
-    //  en el NFT la referencia a ese oro (lote, mg y ley).
+    //  La Marca primero hace oro.approve(direccionDeEsteContrato, oroConsumidoMg)
+    //  en OroToken. Esta funcion, en la MISMA transaccion, quema ese oro
+    //  (burnFrom) y deja registrada en el NFT la referencia (lote, mg y ley).
+    //  Si la Marca no tiene ese oro, la transaccion entera revierte.
     // ----------------------------------------------------------------------
     // Datos del ensamblado agrupados en un struct: asi la funcion recibe pocos
     // argumentos y no desborda el stack ("Stack too deep"). El front (ethers.js)
@@ -268,6 +288,16 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
     {
         _requireEtapa(tokenId, Etapa.Ensamblado);
         require(datos.leyOroMilesimas <= 1000, "Ley invalida (max 1000)");
+        require(oroTokenContract != address(0), "Contrato de oro no configurado (setOroTokenContract)");
+
+        // VALIDACION REAL DEL ORO: esto quema datos.oroConsumidoMg del oro
+        // que tiene la Marca en OroToken. Si la Marca no tiene esa cantidad
+        // (por ejemplo, quiere poner 55.000mg cuando solo se extrajeron/
+        // refinaron 48.000mg en toda la cadena), esta linea revierte la
+        // transaccion entera: NO se puede registrar una pieza con mas oro
+        // del que realmente existe. Requiere que la Marca haya hecho antes
+        // oro.approve(direccionDeEsteContrato, oroConsumidoMg).
+        IOroToken(oroTokenContract).burnFrom(msg.sender, tokenId, datos.oroConsumidoMg);
 
         Ensamblado storage e = ensamblados[tokenId];
         e.sku = datos.sku;
@@ -356,4 +386,61 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
         returns (
             string memory sku,
             string memory metalSoporte,
+            uint256 pesoMetalMg,
+            string memory disenador,
+            address registradoPor,
+            uint256 timestamp
+        )
+    {
+        Ensamblado storage e = ensamblados[tokenId];
+        return (e.sku, e.metalSoporte, e.pesoMetalMg, e.disenador, e.registradoPor, e.timestamp);
+    }
+
+    // Referencia al oro consumido en el ensamblado (rama ORO), separada de
+    // getEnsamblado() por el mismo motivo ("Stack too deep" al devolver
+    // demasiados valores juntos).
+    function getOroDeEnsamblado(uint256 tokenId)
+        external
+        view
+        returns (
+            string memory idLoteOro,
+            uint256 oroConsumidoMg,
+            uint16 leyOroMilesimas
+        )
+    {
+        Ensamblado storage e = ensamblados[tokenId];
+        return (e.idLoteOro, e.oroConsumidoMg, e.leyOroMilesimas);
+    }
+
+    // ----------------------------------------------------------------------
+    //  HELPERS INTERNOS
+    // ----------------------------------------------------------------------
+
+    // OZ v5: ownerOf() PUBLICO revierte solo si no existe; _ownerOf() interno
+    // devuelve address(0) sin revertir, asi podemos chequear existencia limpio.
+    function _requireExiste(uint256 tokenId) internal view {
+        require(_ownerOf(tokenId) != address(0), "Pieza inexistente");
+    }
+
+    // Valida que la pieza este en la etapa que este hito espera, y de paso
+    // valida que exista. Si alguien intenta registrar un hito fuera de orden
+    // (ej. Tallado antes que exista la gema, o dos veces el mismo hito), revierte.
+    function _requireEtapa(uint256 tokenId, Etapa esperada) internal view {
+        _requireExiste(tokenId);
+        require(etapaActual[tokenId] == esperada, "Etapa incorrecta para esta operacion");
+    }
+
+    // ERC721 y AccessControl heredan las dos de ERC165 y cada una implementa
+    // supportsInterface() a su manera. Solidity obliga a resolver ese choque
+    // "a mano" indicando explicitamente las dos bases y llamando a super
+    // (que hace OR entre las dos implementaciones).
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, AccessControl)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+}
    
