@@ -1,9 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 
-// Sección plegable: muestra un encabezado clickeable y abre el contenido
-// (el formulario) recién cuando el usuario hace click. Permite que una página
-// con varios formularios no los muestre todos a la vez.
+
 export function Accordion({
   title,
   subtitle,

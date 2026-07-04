@@ -37,9 +37,7 @@ export const ROLES = {
     path: "/joyeria",
     icon: "🏬",
   },
-  // No es un rol de negocio: es el DEFAULT_ADMIN_ROLE que AccessControl le da
-  // a quien deployó cada contrato (bytes32(0)). Se agrega acá para reusar
-  // toda la infraestructura ya armada (useRole, RoleGuard, HomePage, rutas).
+
   ADMIN: {
     hash: "0x0000000000000000000000000000000000000000000000000000000000000000",
     label: "Administrador",

@@ -13,9 +13,7 @@ import { Accordion } from "../components/ui/Accordion";
 
 type ContratoKey = "joyas" | "oro";
 
-// Qué roles tienen sentido asignar en cada contrato (cada uno tiene su propia
-// AccessControl; asignar un rol que ese contrato no usa no rompe nada, pero
-// para no confundir solo se ofrecen los que realmente importan ahí).
+
 const ROLES_POR_CONTRATO: Record<ContratoKey, RoleKey[]> = {
   joyas: ["MINERA", "TALLADO", "CERTIFICADORA", "MARCA", "JOYERIA"],
   oro: ["MINERA", "REFINERIA", "MARCA"],
@@ -73,21 +71,28 @@ export function AdminPage() {
             : esAdminJoyas
               ? "el contrato de Joyas"
               : "el contrato de Oro"}
-          . Desde acá asignás roles sin pasar por Remix.
+          . Asignar rol.
         </p>
       </div>
 
       <Accordion
         title="Asignar rol"
-        subtitle="Dale un rol a la wallet de un integrante del grupo."
+        subtitle="Asignar rol a wallet"
         defaultOpen
       >
         <AsignarRolForm puedeJoyas={esAdminJoyas} puedeOro={esAdminOro} />
       </Accordion>
 
       <Accordion
+        title="Revocar rol"
+        subtitle="Sacar el rol a una wallet"
+      >
+        <RevocarRolForm puedeJoyas={esAdminJoyas} puedeOro={esAdminOro} />
+      </Accordion>
+
+      <Accordion
         title="Configurar contratos (registry)"
-        subtitle="Conecta Joyas ↔ Oro. Se hace una sola vez después de cada deploy nuevo."
+        subtitle="Conecta Joyas ↔ Oro."
       >
         <ConfigurarContratosForm puedeJoyas={esAdminJoyas} puedeOro={esAdminOro} />
       </Accordion>
@@ -175,6 +180,91 @@ function AsignarRolForm({ puedeJoyas, puedeOro }: { puedeJoyas: boolean; puedeOr
         {status === "pending" ? "Asignando…" : "Asignar rol"}
       </Button>
       <TxStatus status={status} error={error} successMessage="Rol asignado correctamente." />
+    </form>
+  );
+}
+
+
+function RevocarRolForm({ puedeJoyas, puedeOro }: { puedeJoyas: boolean; puedeOro: boolean }) {
+  const { status, error, run } = useTransaction();
+  const [contrato, setContrato] = useState<ContratoKey>(puedeJoyas ? "joyas" : "oro");
+  const opcionesRol = ROLES_POR_CONTRATO[contrato];
+  const [rol, setRol] = useState<RoleKey>(opcionesRol[0]);
+  const [cuenta, setCuenta] = useState("");
+
+  function cambiarContrato(nuevo: ContratoKey) {
+    setContrato(nuevo);
+    setRol(ROLES_POR_CONTRATO[nuevo][0]);
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    await run(async () => {
+      const contract = contrato === "joyas" ? await getWriteContract() : await getWriteOro();
+      const hash = ROLES[rol].hash;
+      const tx = await contract.revokeRole(hash, cuenta);
+      const receipt = await tx.wait();
+      setCuenta("");
+      return receipt;
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label style={{ display: "block", marginBottom: "1rem" }}>
+        <span style={{ display: "block", marginBottom: "0.4rem", fontSize: "0.9rem" }}>
+          Contrato
+        </span>
+        <select
+          value={contrato}
+          onChange={(e) => cambiarContrato(e.target.value as ContratoKey)}
+          style={{
+            width: "100%",
+            padding: "0.7rem 0.9rem",
+            borderRadius: "var(--radius-sm)",
+            border: "1px solid var(--border)",
+            background: "var(--surface-2)",
+            color: "var(--text)",
+          }}
+        >
+          {puedeJoyas && <option value="joyas">Joyas (gema / pieza)</option>}
+          {puedeOro && <option value="oro">Oro (ERC-20)</option>}
+        </select>
+      </label>
+
+      <label style={{ display: "block", marginBottom: "1rem" }}>
+        <span style={{ display: "block", marginBottom: "0.4rem", fontSize: "0.9rem" }}>Rol</span>
+        <select
+          value={rol}
+          onChange={(e) => setRol(e.target.value as RoleKey)}
+          style={{
+            width: "100%",
+            padding: "0.7rem 0.9rem",
+            borderRadius: "var(--radius-sm)",
+            border: "1px solid var(--border)",
+            background: "var(--surface-2)",
+            color: "var(--text)",
+          }}
+        >
+          {opcionesRol.map((r) => (
+            <option key={r} value={r}>
+              {ROLES[r].icon} {ROLES[r].label}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <Input
+        label="Wallet a la que se le saca el rol (0x...)"
+        value={cuenta}
+        onChange={(e) => setCuenta(e.target.value)}
+        required
+      />
+
+      <Button type="submit" disabled={status === "pending"}>
+        {status === "pending" ? "Revocando…" : "Revocar rol"}
+      </Button>
+      <TxStatus status={status} error={error} successMessage="Rol revocado correctamente." />
     </form>
   );
 }

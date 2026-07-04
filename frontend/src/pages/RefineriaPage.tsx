@@ -18,7 +18,6 @@ export function RefineriaPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     await run(async () => {
-      // El refinado es un hito de la RAMA DEL ORO (contrato OroToken).
       const oro = await getWriteOro();
       const tx = await oro.registrarRefinado(
         form.idLote,

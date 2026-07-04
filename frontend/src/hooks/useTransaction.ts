@@ -1,8 +1,6 @@
 import { useState } from "react";
 import type { TxState } from "../components/ui/TxStatus";
 
-// Encapsula el estado de una transacción (idle/pending/success/error) y
-// traduce el error de ethers a un mensaje legible. Reutilizable en cada formulario.
 export function useTransaction() {
   const [status, setStatus] = useState<TxState>("idle");
   const [error, setError] = useState<string | null>(null);

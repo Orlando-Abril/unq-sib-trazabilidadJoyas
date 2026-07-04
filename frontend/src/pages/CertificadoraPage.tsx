@@ -31,7 +31,6 @@ export function CertificadoraPage() {
     setErrorIPFS(null);
     try {
       const cid = await subirArchivoAPinata(archivo);
-      // Rellena el campo hashCertificadoIPFS con el CID que devolvio Pinata.
       update("hashCertificadoIPFS")({
         target: { value: cid },
       } as ChangeEvent<HTMLInputElement>);

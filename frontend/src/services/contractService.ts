@@ -11,12 +11,10 @@ import { getReadProvider, getSigner } from "./provider";
 //  CONTRATO DE LA GEMA / PIEZA (ERC-721)
 // ===========================================================================
 
-// LEER (publico, sin wallet) -> usa el RPC publico de Sepolia.
 export function getReadContract(): Contract {
     return new Contract(JOYAS_ADDRESS, [...JOYAS_ABI], getReadProvider());
 }
 
-// ESCRIBIR (firma con la wallet del usuario y gasta gas)
 export async function getWriteContract(): Promise<Contract> {
     const signer = await getSigner();
     return new Contract(JOYAS_ADDRESS, [...JOYAS_ABI], signer);

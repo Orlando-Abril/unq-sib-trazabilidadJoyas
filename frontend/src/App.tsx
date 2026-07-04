@@ -15,7 +15,6 @@ import { AdminPage } from "./pages/AdminPage";
 import { ROLES } from "./config/roles";
 import type { RoleKey } from "./config/roles";
 
-// Mapa de rol -> página real.
 const PAGES: Partial<Record<RoleKey, ReactNode>> = {
   MINERA: <MineraPage />,
   REFINERIA: <RefineriaPage />,

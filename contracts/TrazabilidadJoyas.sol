@@ -5,34 +5,10 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-// Interfaz minima del contrato de oro: solo lo que necesitamos llamar desde
-// aca (la quema atomica al ensamblar). No importamos el contrato entero para
-// no acoplar los dos artifacts de compilacion.
 interface IOroToken {
     function burnFrom(address cuenta, uint256 tokenIdPieza, uint256 cantidadMg) external;
 }
 
-/**
- * @title  TrazabilidadJoyas
- * @notice RAMA DE LA GEMA (no fungible) + pieza final de la trazabilidad.
- *
- *         Cada GEMA es un NFT (ERC-721) unico. Ese mismo NFT va evolucionando
- *         hasta convertirse en la PIEZA FINAL que recibe el cliente. Acumula su
- *         historia en hitos APPEND-ONLY (no se editan ni borran) firmados por el
- *         actor que los registra (msg.sender).
- *
- *         RECORRIDO BIFURCADO (segun la propuesta):
- *           - Rama ORO  : Minera -> Refineria            (contrato OroToken, ERC-20)
- *           - Rama GEMA : Minera -> Tallado -> Certificadora   (este contrato)
- *         Las dos ramas CONVERGEN en el hito de ENSAMBLADO: la Marca consume oro
- *         (lo quema en OroToken) y lo deja registrado en el NFT de la pieza.
- *
- * @dev    UNIDADES (enteros, Solidity no maneja decimales):
- *         - quilates en centiquilates (ct x100) -> 1.50 ct = 150
- *         - pesos de metal en miligramos (mg)
- *         - ley/pureza del oro en milesimas (750 = 18k)
- *         - precios en centavos (moneda off-chain)
- */
 contract TrazabilidadJoyas is ERC721, AccessControl {
     // ----------------------------------------------------------------------
     //  ROLES (la refineria vive en OroToken, no aca)
@@ -45,22 +21,21 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
 
     // ----------------------------------------------------------------------
     //  ETAPAS — orden secuencial de la rama de la gema.
-    //  etapaActual[tokenId] guarda la PROXIMA etapa esperada.
     // ----------------------------------------------------------------------
     enum Etapa {
-        ExtraccionGema, // 0 - aun no creada
-        Tallado,        // 1
-        Certificacion,  // 2
-        Ensamblado,     // 3 - CONVERGENCIA con el oro
-        Retail,         // 4
-        Venta,          // 5
-        Finalizada      // 6 - vendida al cliente
+        ExtraccionGema,
+        Tallado,
+        Certificacion,
+        Ensamblado,
+        Retail,
+        Venta,
+        Finalizada
     }
 
     // ----------------------------------------------------------------------
     //  STRUCTS — un hito por rol. Cada uno guarda quien firmo y cuando.
     // ----------------------------------------------------------------------
-    struct ExtraccionGema {             // 1. Minera (gema en bruto)
+    struct ExtraccionGema {             // minera
         string  idLote;
         string  tipoGemaBruta;
         uint256 pesoBrutoCentiquilates;
@@ -70,7 +45,7 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
         uint256 timestamp;
     }
 
-    struct Tallado {                    // 2. Tallado (corte de la gema)
+    struct Tallado {                    // corte de la gema
         string  idLoteGema;
         string  tipoCorte;
         uint256 pesoCentiquilates;
@@ -79,31 +54,31 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
         uint256 timestamp;
     }
 
-    struct Certificacion {              // 3. Certificadora (GIA)
+    struct Certificacion {              // Certificadora (GIA)
         string  claridad;
         string  color;
         string  cut;
         uint256 pesoExactoCentiquilates;
-        string  numeroCertificado;      // identificador unico de la gema
-        string  hashCertificadoIPFS;    // documento pesado -> IPFS
+        string  numeroCertificado;
+        string  hashCertificadoIPFS;
         address registradoPor;
         uint256 timestamp;
     }
 
-    struct Ensamblado {                 // 4. Marca — CONVERGENCIA oro + gema
+    struct Ensamblado {                 // Convergencia oro + gema
         string  sku;
         string  metalSoporte;
         uint256 pesoMetalMg;
         string  disenador;
-        // --- referencia al oro consumido (rama ORO) ---
-        string  idLoteOro;              // que lote de oro se uso
-        uint256 oroConsumidoMg;         // cuanto oro se quemo en OroToken
-        uint16  leyOroMilesimas;        // ley de ese oro (750 = 18k)
+
+        string  idLoteOro;
+        uint256 oroConsumidoMg;
+        uint16  leyOroMilesimas;
         address registradoPor;
         uint256 timestamp;
     }
 
-    struct Retail {                     // 5. Joyeria
+    struct Retail {                     // joyeria
         string  idTienda;
         uint256 precioCentavos;
         string  estadoExhibicion;
@@ -112,11 +87,11 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
         uint256 timestamp;
     }
 
-    struct Venta {                      // 6. Cliente final
+    struct Venta {                      //Cliente final
         string  idCliente;
         uint256 precioAbonadoCentavos;
         bool    garantiaActivada;
-        address walletCliente;          // dueno final del NFT
+        address walletCliente;
         address registradoPor;
         uint256 timestamp;
     }
@@ -128,13 +103,10 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
     mapping(uint256 => ExtraccionGema) public extracciones;
     mapping(uint256 => Tallado)        public tallados;
     mapping(uint256 => Certificacion)  public certificaciones;
-    // 'ensamblados' es internal: su struct (11 campos) desbordaria el stack con
-    // el getter automatico. Se expone con getEnsamblado() (struct en memoria).
     mapping(uint256 => Ensamblado)     internal ensamblados;
     mapping(uint256 => Retail)         public retails;
     mapping(uint256 => Venta)          public ventas;
 
-    // N° de certificado -> tokenId (garantiza unicidad del certificado)
     mapping(bytes32 => uint256) public certificadoATokenId;
 
     uint256 private _nextTokenId = 1;
@@ -173,7 +145,7 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
     }
 
     // ----------------------------------------------------------------------
-    //  HITO 1 (GEMA) — EXTRACCION (Minera). Crea (mintea) el NFT de la gema.
+    //  HITO 1 — EXTRACCION - Crea (mintea) el NFT de la gema.
     // ----------------------------------------------------------------------
     function registrarExtraccionGema(
         string calldata idLote,
@@ -226,7 +198,6 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
 
     // ----------------------------------------------------------------------
     //  HITO 3 (GEMA) — CERTIFICACION (GIA)
-    //  Datos agrupados en struct para no desbordar el stack ("Stack too deep").
     // ----------------------------------------------------------------------
     struct DatosCertificacion {
         string  claridad;
@@ -264,22 +235,15 @@ contract TrazabilidadJoyas is ERC721, AccessControl {
 
     // ----------------------------------------------------------------------
     //  HITO 4 — ENSAMBLADO (Marca). CONVERGENCIA de las dos ramas.
-    //  La Marca primero hace oro.approve(direccionDeEsteContrato, oroConsumidoMg)
-    //  en OroToken. Esta funcion, en la MISMA transaccion, quema ese oro
-    //  (burnFrom) y deja registrada en el NFT la referencia (lote, mg y ley).
-    //  Si la Marca no tiene ese oro, la transaccion entera revierte.
     // ----------------------------------------------------------------------
-    // Datos del ensamblado agrupados en un struct: asi la funcion recibe pocos
-    // argumentos y no desborda el stack ("Stack too deep"). El front (ethers.js)
-    // pasa estos campos como un objeto/tupla.
     struct DatosEnsamblado {
         string  sku;
         string  metalSoporte;
         uint256 pesoMetalMg;
         string  disenador;
-        string  idLoteOro;          // que lote de oro se uso (rama ORO)
-        uint256 oroConsumidoMg;     // cuanto oro se quemo en OroToken
-        uint16  leyOroMilesimas;    // ley de ese oro (750 = 18k)
+        string  idLoteOro;
+        uint256 oroConsumidoMg;
+        uint16  leyOroMilesimas;
     }
 
     function registrarEnsamblado(uint256 tokenId, DatosEnsamblado calldata datos)
