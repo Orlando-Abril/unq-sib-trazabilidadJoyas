@@ -1,7 +1,6 @@
 import { useWallet } from "../../hooks/useWallet";
 import styles from "./ConnectWallet.module.css";
 
-// Acorta la dirección: 0x1234...abcd
 function short(address: string) {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }

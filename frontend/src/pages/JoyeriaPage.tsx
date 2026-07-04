@@ -9,10 +9,6 @@ import { TxStatus } from "../components/ui/TxStatus";
 
 type Vista = "retail" | "venta";
 
-// La Joyeria realiza dos hitos: Retail (5) y Venta (6). Antes estaban dentro
-// de un acordeón (había que hacer click para desplegar cada uno); ahora las
-// 2 opciones se ven de entrada, como en un selector, para que sea evidente
-// que existen ambos caminos apenas se entra a la página.
 export function JoyeriaPage() {
   const [vista, setVista] = useState<Vista>("retail");
 

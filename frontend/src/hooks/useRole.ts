@@ -1,47 +1,51 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getReadContract, getReadOro } from "../services/contractService";
 import { ROLES } from "../config/roles";
 import type { RoleKey } from "../config/roles";
 import { useWallet } from "./useWallet";
+
+const POLL_MS = 8000;
 
 export function useRole() {
     const { account, isCorrectNetwork } = useWallet();
     const [roles, setRoles] = useState<RoleKey[]>([]);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        async function fetchRoles() {
-            if (!account || !isCorrectNetwork) {
-                setRoles([]);
-                return;
-            }
-            setLoading(true);
-            try {
-                // OJO: hay DOS contratos (Joyas y Oro), cada uno con su propia
-                // AccessControl. Un rol como REFINERIA solo se otorga en el
-                // contrato de Oro (Joyas ni siquiera declara esa constante), y
-                // ADMIN puede estar otorgado en uno, el otro, o ambos. Por eso
-                // se consulta hasRole() en LOS DOS contratos y alcanza con que
-                // esté en cualquiera de los dos para mostrar la sección.
-                const joyas = getReadContract();
-                const oro = getReadOro();
-                const keys = Object.keys(ROLES) as RoleKey[];
-                const results = await Promise.all(
-                    keys.map(async (k) => {
-                        const [enJoyas, enOro] = await Promise.all([
-                            joyas.hasRole(ROLES[k].hash, account).catch(() => false),
-                            oro.hasRole(ROLES[k].hash, account).catch(() => false),
-                        ]);
-                        return Boolean(enJoyas) || Boolean(enOro);
-                    }),
-                );
-                setRoles(keys.filter((_, i) => results[i]));
-            } finally {
-                setLoading(false);
-            }
+    const primerFetch = useRef(true);
+
+    const fetchRoles = useCallback(async () => {
+        if (!account || !isCorrectNetwork) {
+            setRoles([]);
+            primerFetch.current = true;
+            return;
         }
-        fetchRoles();
+        if (primerFetch.current) setLoading(true);
+        try {
+            const joyas = getReadContract();
+            const oro = getReadOro();
+            const keys = Object.keys(ROLES) as RoleKey[];
+            const results = await Promise.all(
+                keys.map(async (k) => {
+                    const [enJoyas, enOro] = await Promise.all([
+                        joyas.hasRole(ROLES[k].hash, account).catch(() => false),
+                        oro.hasRole(ROLES[k].hash, account).catch(() => false),
+                    ]);
+                    return Boolean(enJoyas) || Boolean(enOro);
+                }),
+            );
+            setRoles(keys.filter((_, i) => results[i]));
+        } finally {
+            setLoading(false);
+            primerFetch.current = false;
+        }
     }, [account, isCorrectNetwork]);
 
-    return { roles, loading };
+    useEffect(() => {
+        fetchRoles();
+        if (!account || !isCorrectNetwork) return;
+        const id = setInterval(fetchRoles, POLL_MS);
+        return () => clearInterval(id);
+    }, [account, isCorrectNetwork, fetchRoles]);
+
+    return { roles, loading, refetch: fetchRoles };
 }

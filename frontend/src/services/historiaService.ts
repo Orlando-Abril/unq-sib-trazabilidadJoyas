@@ -6,7 +6,7 @@ export interface Hito {
   registradoPor: string;
   timestamp: number;
   campos: Record<string, string>;
-  txHash?: string; // hash de la transacción que registró este hito (para el link al explorer)
+  txHash?: string;
 }
 
 export interface Historia {
@@ -16,10 +16,7 @@ export interface Historia {
   hitos: Hito[];
 }
 
-// Busca en los eventos del contrato la transacción que registró un hito
-// puntual (cada evento tiene tokenId indexado). Si el RPC público no puede
-// resolver el filtro (o el contrato no emitió ese evento), no rompe la
-// página: simplemente ese hito queda sin link al explorer.
+
 async function buscarTxHash(
   contract: Contract,
   nombreEvento: string,
@@ -34,9 +31,7 @@ async function buscarTxHash(
   }
 }
 
-// Lee la historia completa de una pieza (todos los hitos registrados).
-// Combina las DOS ramas: la gema (contrato ERC-721) y el oro (contrato ERC-20).
-// No requiere wallet: es de solo lectura, accesible por cualquiera.
+
 export async function getHistoria(tokenId: string): Promise<Historia> {
   const contract = getReadContract();
   const id = BigInt(tokenId);
@@ -45,7 +40,7 @@ export async function getHistoria(tokenId: string): Promise<Historia> {
   try {
     owner = await contract.ownerOf(id);
   } catch {
-    owner = null; // el token no existe
+    owner = null;
   }
 
   const etapa = owner ? Number(await contract.getEtapaActual(id)) : 0;
@@ -141,7 +136,6 @@ export async function getHistoria(tokenId: string): Promise<Historia> {
           });
         }
       } catch {
-        // Si el contrato del oro no está configurado, seguimos sin la rama del oro.
       }
     }
 

@@ -5,7 +5,6 @@ interface Props extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
 }
 
-// Input reutilizable con su etiqueta. Acepta todas las props nativas de <input>.
 export function Input({ label, ...rest }: Props) {
   return (
     <label className={styles.field}>

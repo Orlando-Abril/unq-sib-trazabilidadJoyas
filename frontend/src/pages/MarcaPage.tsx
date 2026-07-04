@@ -26,16 +26,12 @@ export function MarcaPage() {
       const tokenId = BigInt(form.tokenId);
       const oroMg = BigInt(form.oroConsumidoMg);
 
-      // 1) Le doy permiso al contrato de Joyas para gastar (quemar) mi oro.
-      //    Es el mismo mecanismo que usan los DEX (approve + spender).
+
       const oro = await getWriteOro();
       const txApprove = await oro.approve(JOYAS_ADDRESS, oroMg);
       await txApprove.wait();
 
-      // 2) Registro el ensamblado. EN LA MISMA TRANSACCIÓN, el contrato de
-      //    Joyas quema (burnFrom) el oro aprobado. Si no tengo esa cantidad
-      //    de oro real en la cadena, esto revierte y no se crea la pieza.
-      //    El 2º argumento es el struct DatosEnsamblado (se pasa como tupla).
+
       const joyas = await getWriteContract();
       const txEns = await joyas.registrarEnsamblado(tokenId, [
         form.sku,

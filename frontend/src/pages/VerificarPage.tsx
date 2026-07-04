@@ -16,7 +16,6 @@ export function VerificarPage() {
   return <Detalle tokenId={tokenId} />;
 }
 
-// Buscador: pedís un tokenId y te lleva a su historia.
 function Buscador() {
   const navigate = useNavigate();
   const [id, setId] = useState("");

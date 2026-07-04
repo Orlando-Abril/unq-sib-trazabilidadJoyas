@@ -20,6 +20,7 @@ export const JOYAS_ABI = [
     // --- Roles / acceso ---
     "function hasRole(bytes32 role, address account) view returns (bool)",
     "function asignarRol(bytes32 rol, address cuenta)",
+    "function revokeRole(bytes32 role, address account)",
 
     // --- Registro de contratos (patrón registry/factory) ---
     "function oroTokenContract() view returns (address)",
@@ -60,6 +61,8 @@ export const ORO_ABI = [
     // --- Roles / acceso ---
     "function hasRole(bytes32 role, address account) view returns (bool)",
     "function asignarRol(bytes32 rol, address cuenta)",
+
+    "function revokeRole(bytes32 role, address account)",
 
     // --- Hitos de la rama del oro ---
     "function registrarExtraccionOro(string idLote, string tipoMineralBruto, uint256 pesoBrutoMg, string responsable, string estadoInicial)",

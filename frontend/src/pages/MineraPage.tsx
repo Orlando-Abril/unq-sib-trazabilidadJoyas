@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { getWriteContract, getWriteOro } from "../services/contractService";
+import { getReadContract, getReadOro, getWriteContract, getWriteOro } from "../services/contractService";
+import { ROLES } from "../config/roles";
+import { useWallet } from "../hooks/useWallet";
 import { useTransaction } from "../hooks/useTransaction";
 import { useForm } from "../hooks/useForm";
 import { Input } from "../components/ui/Input";
@@ -8,16 +10,67 @@ import { Button } from "../components/ui/Button";
 import { TxStatus } from "../components/ui/TxStatus";
 import { Accordion } from "../components/ui/Accordion";
 
-// La minera abre las dos ramas. Cada accion se abre al hacer click en su seccion.
+// MINERA_ROLE se puede otorgar en el contrato de Joyas (rama de la gema), en
+// el de Oro (rama del oro), o en los dos — son AccessControl independientes.
+// Antes esta página mostraba SIEMPRE los dos formularios sin importar en cuál
+// de los dos contratos tenías el rol realmente (con el riesgo de que alguien
+// complete el que no le corresponde y la transacción revierta). Ahora se
+// chequea hasRole() por separado en cada contrato y solo se muestra el
+// formulario que esa wallet puede usar de verdad.
 export function MineraPage() {
+  const { account } = useWallet();
+  const [puedeGema, setPuedeGema] = useState(false);
+  const [puedeOro, setPuedeOro] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    async function check() {
+      if (!account) {
+        setPuedeGema(false);
+        setPuedeOro(false);
+        setChecking(false);
+        return;
+      }
+      setChecking(true);
+      try {
+        const [enJoyas, enOro] = await Promise.all([
+          getReadContract().hasRole(ROLES.MINERA.hash, account).catch(() => false),
+          getReadOro().hasRole(ROLES.MINERA.hash, account).catch(() => false),
+        ]);
+        setPuedeGema(Boolean(enJoyas));
+        setPuedeOro(Boolean(enOro));
+      } finally {
+        setChecking(false);
+      }
+    }
+    check();
+  }, [account]);
+
+  if (checking) return <p>Verificando en qué rama tenés el rol de Minera…</p>;
+
+  if (!puedeGema && !puedeOro) {
+    return (
+      <div className="notice">
+        <p>
+          🚫 Tu wallet tiene el rol de Minera, pero no está habilitada en ninguno de los dos
+          contratos ahora mismo.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="stack">
-      <Accordion title="Reportar lote gema" subtitle="Extrae la gema y crea un NFT para ella.">
-        <GemaForm />
-      </Accordion>
-      <Accordion title="Reportar lote oro" subtitle="Extrae el oro y lo mintea como token.">
-        <OroForm />
-      </Accordion>
+      {puedeGema && (
+        <Accordion title="Reportar lote gema" subtitle="Extrae la gema y crea un NFT para ella.">
+          <GemaForm />
+        </Accordion>
+      )}
+      {puedeOro && (
+        <Accordion title="Reportar lote oro" subtitle="Extrae el oro y lo mintea como token.">
+          <OroForm />
+        </Accordion>
+      )}
     </div>
   );
 }

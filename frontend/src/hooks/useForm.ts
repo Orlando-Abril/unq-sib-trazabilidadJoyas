@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { ChangeEvent } from "react";
 
 // Manejo genérico de un formulario de campos de texto.
-// Evita repetir el patrón useState + onChange en cada página.
 export function useForm<T extends Record<string, string>>(initial: T) {
   const [form, setForm] = useState<T>(initial);
 
