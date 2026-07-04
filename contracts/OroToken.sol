@@ -149,7 +149,40 @@ contract OroToken is ERC20, AccessControl {
     }
 
     // ----------------------------------------------------------------------
+    //  REGISTRO DE CONTRATOS (patron "registry"/factory que pidio el profesor)
+    //  En vez de que este contrato y TrazabilidadJoyas queden atados para
+    //  siempre a una direccion fija del otro, cada uno guarda la direccion del
+    //  otro en una variable que el ADMIN puede actualizar. Asi, si el dia de
+    //  mañana se corrige o se re-despliega SOLO uno de los dos contratos, no
+    //  hace falta volver a desplegar el otro: simplemente se llama a esta
+    //  funcion con la nueva direccion.
+    // ----------------------------------------------------------------------
+    address public joyasContract;
+
+    function setJoyasContract(address _joyas) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_joyas != address(0), "Direccion invalida");
+        joyasContract = _joyas;
+    }
+
+    // ----------------------------------------------------------------------
     //  CONVERGENCIA — La marca CONSUME (quema) oro para fabricar la pieza NFT.
-    //  Liga la quema al tokenId de la pieza (del contrato de gemas) por evento.
-    //  Requiere que la marca tenga ese oro en su wallet (se lo transfirio la
-    //  refine
+    //
+    //  Antes esto se hacia en 2 pasos sueltos (la marca quemaba oro aca, y
+    //  por separado cargaba a mano un numero en TrazabilidadJoyas.registrarEnsamblado):
+    //  nada garantizaba que los dos numeros fueran el mismo, ni que el oro
+    //  cargado en el NFT realmente hubiese existido. Ahora esta funcion solo
+    //  puede ser llamada por el contrato de Joyas (ver joyasContract), DENTRO
+    //  de la misma transaccion de registrarEnsamblado. Asi el monto que queda
+    //  escrito en el NFT es EXACTAMENTE el monto que se quemo, ni un mg mas.
+    //
+    //  La marca debe darle permiso previamente al contrato de Joyas con
+    //  approve(joyasContract, cantidadMg) (estandar ERC-20), como si fuera un
+    //  DEX gastando tokens en su nombre.
+    // ----------------------------------------------------------------------
+    function burnFrom(address cuenta, uint256 tokenIdPieza, uint256 cantidadMg) external {
+        require(msg.sender == joyasContract, "Solo el contrato de Joyas puede quemar oro");
+        _spendAllowance(cuenta, msg.sender, cantidadMg); // revierte si no alcanza el allowance
+        _burn(cuenta, cantidadMg); // revierte si no alcanza el balance (ERC20: burn amount exceeds balance)
+        emit OroConsumido(tokenIdPieza, cantidadMg, cuenta);
+    }
+}

@@ -1,3 +1,4 @@
+import type { Contract } from "ethers";
 import { getReadContract, getReadOro } from "./contractService";
 
 export interface Hito {
@@ -5,6 +6,7 @@ export interface Hito {
   registradoPor: string;
   timestamp: number;
   campos: Record<string, string>;
+  txHash?: string; // hash de la transacción que registró este hito (para el link al explorer)
 }
 
 export interface Historia {
@@ -12,6 +14,24 @@ export interface Historia {
   owner: string | null;
   etapa: number;
   hitos: Hito[];
+}
+
+// Busca en los eventos del contrato la transacción que registró un hito
+// puntual (cada evento tiene tokenId indexado). Si el RPC público no puede
+// resolver el filtro (o el contrato no emitió ese evento), no rompe la
+// página: simplemente ese hito queda sin link al explorer.
+async function buscarTxHash(
+  contract: Contract,
+  nombreEvento: string,
+  tokenId: bigint,
+): Promise<string | undefined> {
+  try {
+    const filtro = contract.filters[nombreEvento](tokenId);
+    const eventos = await contract.queryFilter(filtro);
+    return eventos.length > 0 ? eventos[eventos.length - 1].transactionHash : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 // Lee la historia completa de una pieza (todos los hitos registrados).
@@ -45,6 +65,7 @@ export async function getHistoria(tokenId: string): Promise<Historia> {
         Responsable: ex.responsable,
         "Estado inicial": ex.estadoInicial,
       },
+      txHash: await buscarTxHash(contract, "GemaCreada", id),
     });
   }
 
@@ -61,6 +82,7 @@ export async function getHistoria(tokenId: string): Promise<Historia> {
         "Peso (centiquilates)": ta.pesoCentiquilates.toString(),
         "Cantidad de piezas": ta.cantidadPiezas.toString(),
       },
+      txHash: await buscarTxHash(contract, "TalladoRegistrado", id),
     });
   }
 
@@ -79,6 +101,7 @@ export async function getHistoria(tokenId: string): Promise<Historia> {
         "N° certificado": ce.numeroCertificado,
         "Hash IPFS": ce.hashCertificadoIPFS,
       },
+      txHash: await buscarTxHash(contract, "CertificacionRegistrada", id),
     });
   }
 
@@ -135,6 +158,7 @@ export async function getHistoria(tokenId: string): Promise<Historia> {
         "Oro consumido (mg)": oroRef.oroConsumidoMg.toString(),
         "Ley del oro (milésimas)": oroRef.leyOroMilesimas.toString(),
       },
+      txHash: await buscarTxHash(contract, "EnsambladoRegistrado", id),
     });
   }
 
@@ -151,6 +175,7 @@ export async function getHistoria(tokenId: string): Promise<Historia> {
         "Estado de exhibición": rt.estadoExhibicion,
         "Código QR": rt.codigoQR,
       },
+      txHash: await buscarTxHash(contract, "RetailRegistrado", id),
     });
   }
 
@@ -167,6 +192,7 @@ export async function getHistoria(tokenId: string): Promise<Historia> {
         "Garantía activada": ve.garantiaActivada ? "Sí" : "No",
         "Wallet del cliente": ve.walletCliente,
       },
+      txHash: await buscarTxHash(contract, "VentaRegistrada", id),
     });
   }
 

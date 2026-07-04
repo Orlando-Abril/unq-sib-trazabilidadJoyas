@@ -5,11 +5,13 @@
 //  Pegá acá las direcciones que te da Remix al deployar CADA contrato en Sepolia.
 // ============================================================================
 
-// TODO: reemplazar por la dirección del NUEVO TrazabilidadJoyas deployado.
-export const JOYAS_ADDRESS = "0xa4D16B20417208649F7C639248a80e6e6C5DA4e4";
+export const JOYAS_ADDRESS = "0x8caE9a34d87acd181621C6288482D92BcDB043f3";
 
-// TODO: pegar la dirección del OroToken deployado.
-export const ORO_ADDRESS = "0x0a9AEdf9017fb718A7168b039E7A8EC463fC6A5d";
+export const ORO_ADDRESS = "0x44541f7F08B20Ea53f12f16e512B77F330c9C08e";
+
+// bytes32(0): el rol admin que da AccessControl a quien deployó cada contrato.
+export const DEFAULT_ADMIN_ROLE =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 // ---------------------------------------------------------------------------
 //  ABI del contrato de la GEMA / pieza (ERC-721)
@@ -18,6 +20,10 @@ export const JOYAS_ABI = [
     // --- Roles / acceso ---
     "function hasRole(bytes32 role, address account) view returns (bool)",
     "function asignarRol(bytes32 rol, address cuenta)",
+
+    // --- Registro de contratos (patrón registry/factory) ---
+    "function oroTokenContract() view returns (address)",
+    "function setOroTokenContract(address _oro)",
 
     // --- Registro de hitos de la gema ---
     "function registrarExtraccionGema(string idLote, string tipoGemaBruta, uint256 pesoBrutoCentiquilates, string responsable, string estadoInicial) returns (uint256)",
@@ -58,12 +64,18 @@ export const ORO_ABI = [
     // --- Hitos de la rama del oro ---
     "function registrarExtraccionOro(string idLote, string tipoMineralBruto, uint256 pesoBrutoMg, string responsable, string estadoInicial)",
     "function registrarRefinado(string idLote, string metodo, uint256 pesoPostMg, uint16 leyMilesimas)",
-    "function consumirOroParaPieza(uint256 tokenIdPieza, uint256 cantidadMg)",
 
     // --- ERC-20 estándar (el oro viaja entre actores) ---
     "function transfer(address to, uint256 amount) returns (bool)",
     "function balanceOf(address account) view returns (uint256)",
     "function decimals() view returns (uint8)",
+    "function approve(address spender, uint256 amount) returns (bool)",
+    "function allowance(address owner, address spender) view returns (uint256)",
+
+    // --- Registro de contratos (patrón registry/factory) + quema atómica ---
+    "function joyasContract() view returns (address)",
+    "function setJoyasContract(address _joyas)",
+    "function burnFrom(address cuenta, uint256 tokenIdPieza, uint256 cantidadMg)",
 
     // --- Lectura del lote ---
     "function getLote(string idLote) view returns (tuple(string idLote, string tipoMineralBruto, string responsable, string estadoInicial, uint256 pesoBrutoMg, bool refinado, string metodo, uint256 pesoPostMg, uint16 leyMilesimas, address minera, address refineria, uint256 timestampExtraccion, uint256 timestampRefinado) lote)",

@@ -1,5 +1,6 @@
 import type { FormEvent } from "react";
 import { getWriteContract, getWriteOro } from "../services/contractService";
+import { JOYAS_ADDRESS } from "../config/contract";
 import { useTransaction } from "../hooks/useTransaction";
 import { useForm } from "../hooks/useForm";
 import { Input } from "../components/ui/Input";
@@ -25,12 +26,15 @@ export function MarcaPage() {
       const tokenId = BigInt(form.tokenId);
       const oroMg = BigInt(form.oroConsumidoMg);
 
-      // 1) CONVERGENCIA: la marca quema el oro que consume para esta pieza.
+      // 1) Le doy permiso al contrato de Joyas para gastar (quemar) mi oro.
+      //    Es el mismo mecanismo que usan los DEX (approve + spender).
       const oro = await getWriteOro();
-      const txOro = await oro.consumirOroParaPieza(tokenId, oroMg);
-      await txOro.wait();
+      const txApprove = await oro.approve(JOYAS_ADDRESS, oroMg);
+      await txApprove.wait();
 
-      // 2) Registra el ensamblado en el NFT con la referencia al oro.
+      // 2) Registro el ensamblado. EN LA MISMA TRANSACCIÓN, el contrato de
+      //    Joyas quema (burnFrom) el oro aprobado. Si no tengo esa cantidad
+      //    de oro real en la cadena, esto revierte y no se crea la pieza.
       //    El 2º argumento es el struct DatosEnsamblado (se pasa como tupla).
       const joyas = await getWriteContract();
       const txEns = await joyas.registrarEnsamblado(tokenId, [
@@ -50,7 +54,10 @@ export function MarcaPage() {
     <div className="card form-card">
       <h2 className="page-title">Marca — Registrar ensamblado</h2>
       <p className="page-subtitle">
-        Convergencia · quema el oro consumido y arma la pieza final.
+        Convergencia · quema el oro consumido y arma la pieza final. Vas a firmar
+        2 transacciones en MetaMask (autorizar el oro y registrar el ensamblado).
+        Si no tenés suficiente oro real en la cadena, la segunda transacción
+        va a revertir.
       </p>
       <form onSubmit={handleSubmit}>
         <Input label="Token ID de la pieza" type="number" min="1" value={form.tokenId} onChange={update("tokenId")} required />
@@ -62,7 +69,7 @@ export function MarcaPage() {
         <Input label="Oro consumido (mg) — se quema" type="number" min="1" value={form.oroConsumidoMg} onChange={update("oroConsumidoMg")} required />
         <Input label="Ley del oro (milésimas, ej. 750)" type="number" min="0" max="1000" value={form.leyOroMilesimas} onChange={update("leyOroMilesimas")} required />
         <Button type="submit" disabled={status === "pending"}>
-          {status === "pending" ? "Procesando…" : "Quemar oro + registrar ensamblado"}
+          {status === "pending" ? "Procesando (2 firmas)…" : "Autorizar oro + registrar ensamblado"}
         </Button>
       </form>
       <TxStatus status={status} error={error} successMessage="Oro consumido y ensamblado registrado." />

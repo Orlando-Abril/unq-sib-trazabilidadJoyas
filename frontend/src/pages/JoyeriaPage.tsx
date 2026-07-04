@@ -6,20 +6,82 @@ import { useForm } from "../hooks/useForm";
 import { Input } from "../components/ui/Input";
 import { Button } from "../components/ui/Button";
 import { TxStatus } from "../components/ui/TxStatus";
-import { Accordion } from "../components/ui/Accordion";
 
-// La Joyeria realiza dos hitos: Retail (6) y Venta (7).
-// Cada uno se abre al hacer click en su seccion.
+type Vista = "retail" | "venta";
+
+// La Joyeria realiza dos hitos: Retail (5) y Venta (6). Antes estaban dentro
+// de un acordeón (había que hacer click para desplegar cada uno); ahora las
+// 2 opciones se ven de entrada, como en un selector, para que sea evidente
+// que existen ambos caminos apenas se entra a la página.
 export function JoyeriaPage() {
+  const [vista, setVista] = useState<Vista>("retail");
+
   return (
     <div className="stack">
-      <Accordion title="Poner en venta en Joyería" subtitle="Ingreso de la pieza a la tienda.">
-        <RetailForm />
-      </Accordion>
-      <Accordion title="Vender a otro dueño" subtitle="Transfiere el NFT a la wallet del cliente.">
-        <VentaForm />
-      </Accordion>
+      <div>
+        <h2 className="page-title">Joyería</h2>
+        <p className="page-subtitle">Elegí qué querés hacer con la pieza.</p>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "1rem",
+        }}
+      >
+        <OpcionCard
+          icon="🏬"
+          titulo="Poner en venta"
+          descripcion="Ingreso de la pieza a la tienda."
+          activa={vista === "retail"}
+          onClick={() => setVista("retail")}
+        />
+        <OpcionCard
+          icon="🤝"
+          titulo="Vender a un cliente"
+          descripcion="Transfiere el NFT a la wallet del cliente."
+          activa={vista === "venta"}
+          onClick={() => setVista("venta")}
+        />
+      </div>
+
+      <div className="card">{vista === "retail" ? <RetailForm /> : <VentaForm />}</div>
     </div>
+  );
+}
+
+function OpcionCard({
+  icon,
+  titulo,
+  descripcion,
+  activa,
+  onClick,
+}: {
+  icon: string;
+  titulo: string;
+  descripcion: string;
+  activa: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="role-card"
+      style={{
+        appearance: "none",
+        cursor: "pointer",
+        textAlign: "left",
+        width: "100%",
+        borderColor: activa ? "var(--primary)" : undefined,
+        boxShadow: activa ? "var(--shadow-hover)" : undefined,
+      }}
+    >
+      <span className="role-icon">{icon}</span>
+      <span className="role-name">{titulo}</span>
+      <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>{descripcion}</span>
+    </button>
   );
 }
 
