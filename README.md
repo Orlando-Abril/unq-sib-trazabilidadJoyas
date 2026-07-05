@@ -12,9 +12,7 @@ de la mina al cliente final, mediante NFTs inmutables y verificables.
 
 - [¿Qué es este proyecto?](#-qué-es-este-proyecto)
 - [El problema y la solución](#-el-problema-y-la-solución)
-- [Cómo funciona](#-cómo-funciona)
 - [Los 7 roles de la cadena](#-los-7-roles-de-la-cadena)
-- [Stack tecnológico](#-stack-tecnológico)
 - [Smart Contract](#-smart-contract)
 - [Decisiones de diseño](#-decisiones-de-diseño)
 - [Autores](#-participantes)
