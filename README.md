@@ -1,21 +1,12 @@
 <div align="center">
 
-# 💎 Sistema Descentralizado de Trazabilidad de Joyas Preciosas
+# Sistema Descentralizado de Trazabilidad de Joyas Preciosas
 
 Trazabilidad de la cadena de valor de minerales y gemas preciosas sobre Ethereum,
 de la mina al cliente final, mediante NFTs inmutables y verificables.
 
-![Solidity](https://img.shields.io/badge/Solidity-0.8.20-363636?logo=solidity)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
-![ethers.js](https://img.shields.io/badge/ethers.js-6-2535A0)
-![Network](https://img.shields.io/badge/Network-Sepolia-purple)
-![License](https://img.shields.io/badge/License-MIT-green)
-
 </div>
 
----
 
 ## 📑 Tabla de contenidos
 
@@ -23,14 +14,10 @@ de la mina al cliente final, mediante NFTs inmutables y verificables.
 - [El problema y la solución](#-el-problema-y-la-solución)
 - [Cómo funciona](#-cómo-funciona)
 - [Los 7 roles de la cadena](#-los-7-roles-de-la-cadena)
-- [Arquitectura del repositorio](#-arquitectura-del-repositorio)
 - [Stack tecnológico](#-stack-tecnológico)
 - [Smart Contract](#-smart-contract)
-- [Puesta en marcha](#-puesta-en-marcha)
 - [Decisiones de diseño](#-decisiones-de-diseño)
-- [Roadmap](#-roadmap)
-- [Autores](#-autores)
-- [Licencia](#-licencia)
+- [Autores](#-participantes)
 
 ---
 
@@ -94,104 +81,54 @@ por cualquiera mediante un **código QR**.
 > Los hitos se registran **en orden** y **una sola vez**: el contrato rechaza cualquier
 > intento de saltear pasos o de modificar lo ya escrito.
 
-## 🗂 Arquitectura del repositorio
-
-Monorepo con el contrato y el frontend separados por capas.
-
-```
-unq-sib-trazabilidadJoyas/
-├── contracts/                  # Smart contract en Solidity
-│   └── TrazabilidadJoyas.sol
-├── frontend/                   # DApp en React + TypeScript (Vite)
-│   └── src/
-│       ├── components/         # Componentes de UI reutilizables
-│       ├── pages/              # Una vista por DApp/rol + verificación pública
-│       ├── hooks/              # useWallet, useRole, useForm, useTransaction
-│       ├── context/            # Estado global de la wallet
-│       ├── services/           # Capa de acceso a la blockchain (ethers)
-│       ├── config/             # Red, dirección del contrato, ABI y roles
-│       └── types/              # Tipos compartidos
-├── docs/                       # Guía de prueba y documentación
-└── README.md
-```
-
-## 🛠 Stack tecnológico
-
-| Capa | Tecnología |
-|------|-----------|
-| Smart contract | Solidity 0.8.20, OpenZeppelin (ERC-721 + AccessControl) |
-| Red | Ethereum Sepolia (testnet) |
-| Frontend | React 19 + TypeScript + Vite |
-| Conexión blockchain | ethers.js v6 |
-| Estilos | CSS Modules |
-| Wallet | MetaMask |
-| Almacenamiento pesado | IPFS (hash on-chain) |
-
 ## 📜 Smart Contract
 
 - **Red:** Sepolia testnet
-- **Dirección:** [`0x25d24eB8577e93E0Aa6557791fB6841520214107`](https://sepolia.etherscan.io/address/0x25d24eB8577e93E0Aa6557791fB6841520214107)
-- **Token:** Trazabilidad Joyas (`TJOYA`) — ERC-721
-- **Estándares:** ERC-721 + AccessControl (OpenZeppelin)
-- **Verificado en:** Sourcify · Blockscout
+- **Dirección:** 0x8caE9a34d87acd181621C6288482D92BcDB043f3
+- **Token Gema:** ERC-721 (No fungible)
 
-El paso a paso para probar el contrato hito por hito está en
-[`docs/GUIA_PRUEBA.md`](docs/GUIA_PRUEBA.md).
+- **Red:** Sepolia testnet
+- **Dirección:** 0x44541f7F08B20Ea53f12f16e512B77F330c9C08e
+- **Estandares:** ERC-20 (fungible)
 
-## 🚀 Puesta en marcha
-
-### Requisitos previos
-
-- [Node.js](https://nodejs.org/) 18+
-- [MetaMask](https://metamask.io/) con la red Sepolia y algo de SepoliaETH (de un faucet)
-
-### Smart contract
-
-Se desarrolla en [Remix](https://remix.ethereum.org/) y se despliega en Sepolia
-mediante *Injected Provider - MetaMask*. El código está en
-[`contracts/TrazabilidadJoyas.sol`](contracts/TrazabilidadJoyas.sol).
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-La app queda disponible en `http://localhost:5173`.
+Se desarrollan en [Remix](https://remix.ethereum.org/) y se despliegan en Sepolia mediante MetaMask.
 
 ## 🧠 Decisiones de diseño
 
-- **Un contrato ERC-721, no ERC-721 + ERC-20 juntos.** Un mismo contrato no puede
-  heredar ambos estándares (colisión de `balanceOf`). El oro fungible se documenta
-  como datos on-chain (peso + ley) dentro del hito de Refinería. Un token de oro
-  ERC-20 transferible, de necesitarse, iría en un contrato aparte.
-- **Hitos append-only.** No existen funciones para editar ni borrar: la inmutabilidad
-  es estructural, no una convención.
-- **Control de acceso por rol** con `AccessControl` de OpenZeppelin: cada función de
-  registro exige el rol correspondiente (`MINERA_ROLE`, `REFINERIA_ROLE`, …).
-- **Orden secuencial forzado** mediante una máquina de estados (`etapaActual`).
+- **Dos contratos, uno por cada naturaleza de activo (ERC-721 + ERC-20).** El oro es
+  fungible —un miligramo de oro vale lo mismo que cualquier otro de la misma ley—,
+  mientras que la gema es única y evoluciona hasta ser la pieza final. Se modelan con
+  dos estándares distintos: [`TrazabilidadJoyas.sol`](contracts/TrazabilidadJoyas.sol)
+  (ERC-721, la gema/pieza) y [`OroToken.sol`](contracts/OroToken.sol)
+- **Bifurcación de ramas que convergen en el Ensamblado.** Rama del oro: Minera →
+  Refinería (contrato `OroToken`). Rama de la gema: Minera → Tallado → Certificadora
+  (contrato `TrazabilidadJoyas`). Las dos se unen cuando la Marca fabrica la pieza.
+- **Patrón registry entre los dos contratos, actualizable por el admin.** En vez de
+  hardcodear la dirección del contrato "hermano" al momento de compilar, cada uno
+  guarda la dirección del otro en una variable de estado (`oroTokenContract` /
+  `joyasContract`) que solo el admin puede actualizar (`setOroTokenContract` /
+  `setJoyasContract`). Permite redeployar uno de los dos contratos sin tener que
+  redeployar el otro.
+- **Hitos append-only.** No existen funciones para editar ni borrar ningún hito ya
+  registrado: la inmutabilidad es estructural —no depende de que nadie la respete—,
+  no una convención de la interfaz.
+- **Control de acceso por rol**, con `AccessControl` de OpenZeppelin en los DOS
+  contratos por separado: cada función de registro exige el rol correspondiente
+  (`MINERA_ROLE`, `REFINERIA_ROLE`, `TALLADO_ROLE`, `CERTIFICADORA_ROLE`,
+  `MARCA_ROLE`, `JOYERIA_ROLE`). Como cada contrato tiene su propio `AccessControl`,
+  un rol como Refinería solo existe en `OroToken` — ni siquiera está declarado en
+  `TrazabilidadJoyas`.
+- **Orden secuencial forzado** mediante una máquina de estados (`enum Etapa` +
+  `etapaActual[tokenId]`, validada en cada función con `_requireEtapa`): no se puede
+  saltear un hito ni registrar el mismo dos veces.
+- **Documentos pesados en IPFS, solo el hash on-chain.** El certificado GIA (PDF) se
+  sube a IPFS vía Pinata; en el contrato solo queda su hash (`hashCertificadoIPFS`),
+  para minimizar el costo de gas.
 - **Frontend en capas:** `config → services → hooks → components`. Ningún componente
   habla directo con ethers; todo pasa por la capa de servicios.
-- **Documentos pesados en IPFS**, solo el hash on-chain, para minimizar gas.
 
-## 🗺 Roadmap
-
-- [x] Smart contract con los 7 hitos, roles e inmutabilidad
-- [x] Despliegue y verificación en Sepolia
-- [x] Frontend: conexión de wallet y detección de rol
-- [x] Frontend: los 7 formularios por rol
-- [x] Página pública de verificación (QR)
-- [ ] Integración con IPFS para certificados y fotos
-- [ ] Panel de administración para asignar roles desde la UI
-
-## 👩‍💻 Autores
+## 👩‍💻 Participantes
 
 - Abril Orlando
 - Guadalupe Zitterkopf
 - Valentín Camaño
-
-## 📄 Licencia
-
-Distribuido bajo licencia MIT. Ver el archivo `LICENSE` para más detalles.
